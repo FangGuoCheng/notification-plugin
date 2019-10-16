@@ -56,8 +56,15 @@ public class BuildState {
 
     private TestState testSummary;
 
+    private String buildXml;
 
+    public String getBuildXml() {
+        return buildXml;
+    }
 
+    public void setBuildXml(String buildXml) {
+        this.buildXml = buildXml;
+    }
 
     /**
      *  Map of artifacts: file name => Map of artifact locations ( location name => artifact URL )

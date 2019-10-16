@@ -35,8 +35,7 @@ import org.apache.commons.lang.StringUtils;
 
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -166,7 +165,29 @@ public enum Phase {
         	return event.equals(this.toString().toLowerCase());	
         }
     }
+    File getFileByName(File[] files,String name) {
+        for(File file:files) {
+            if(file.getName().equals(name)) {
+                return file;
+            }
+        }
+        return null;
+    }
+    public String readFile(File file) {
+        StringBuilder result = new StringBuilder();
+        try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String str;
+            while (null != (str = reader.readLine())) {
+                result.append(str);
+            }
+            reader.close();
+        } catch (FileNotFoundException e) {
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result.toString();
+    }
     private JobState buildJobState(Job job, Run run, TaskListener listener, long timestamp, Endpoint target)
         throws IOException, InterruptedException
     {
@@ -180,7 +201,11 @@ public enum Phase {
         ParametersAction   paramsAction = run.getAction(ParametersAction.class);
         EnvVars            environment  = run.getEnvironment( listener );
         StringBuilder      log          = this.getLog(run, target);
-
+        if(Phase.COMPLETED.equals(this)  || Phase.FINALIZED.equals(this)) {
+            File buildsFile = getFileByName(job.getBuildDir().listFiles(),String.valueOf(run.getNumber()));
+            File buildXml = getFileByName(buildsFile.listFiles(),"build.xml");
+            buildState.setBuildXml(readFile(buildXml));
+        }
         jobState.setName( job.getName());
         jobState.setDisplayName(job.getDisplayName());
         jobState.setUrl( job.getUrl());
